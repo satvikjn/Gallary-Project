@@ -60,7 +60,7 @@ npm install
 
 ### Start the Development Server
 ```bash
-npm vital
+npm vite
 ```
 
 ### Open in Browser
