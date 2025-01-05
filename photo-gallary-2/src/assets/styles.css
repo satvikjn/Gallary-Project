@@ -1,0 +1,29 @@
+/* Styling for Masonry grid */
+.my-masonry-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .my-masonry-grid_column {
+    width: 100%;
+    flex-grow: 1;
+  }
+  
+  /* Optional custom styles */
+  img {
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+  
+
+  .card {
+    border: none;
+  }
+  .card-img-top {
+    height: auto;
+    display: block;
+    width: 100%;
+  }
+  
