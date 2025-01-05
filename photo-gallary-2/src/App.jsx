@@ -1,9 +1,6 @@
 import React, { useState } from "react";
-import { Container, Typography, Box } from '@mui/material';
-import ImageManagement from './components/ImageManagement';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ImageUploader from './components/ImageUploader';
-import GalleryPage from "./components/GalleryPage";
 import './assets/styles.css';
 
 const App = () => {
@@ -17,10 +14,6 @@ const App = () => {
         <Route
           path="/"
           element={<ImageUploader imageList={imageList} setImageList={setImageList} setSelectedImage={setSelectedImage} setDrawerVisible = {setDrawerVisible} drawerVisible = {drawerVisible} selectedImage = {selectedImage}/>}
-        />
-        <Route
-          path="/gallery"
-          element={<GalleryPage imageList={imageList} />}
         />
       </Routes>
     </Router>
