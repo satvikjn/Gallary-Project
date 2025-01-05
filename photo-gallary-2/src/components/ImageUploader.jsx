@@ -4,7 +4,8 @@ import folder from "./img/folder2.png";
 import { Upload as UploadIcon, RotateRight, Flip } from '@mui/icons-material';
 import Cropper from 'react-easy-crop';
 import Masonry from '@mui/lab/Masonry';
-import { getCroppedImg } from '../utils/imageUtils'
+import { rotateImage, flipImage, getCroppedImg } from '../utils/imageTransformUtils';
+
 
 const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedImage, drawerVisible, selectedImage }) => {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -30,22 +31,54 @@ const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedI
     setCroppedArea(croppedAreaPixels);
   };
 
+  const handleRotate = () => {
+    if (!selectedImage) return;
+
+  rotateImage(selectedImage, 90, (rotatedImage) => {
+    setSelectedImage(rotatedImage);
+  });
+    console.log('Rotate functionality here');
+  };
+  
+  const handleFlipHorizontal = () => {
+    if (!selectedImage) return;
+
+    flipImage(selectedImage, 'horizontal', (flippedImage) => {
+      setSelectedImage(flippedImage); // Update the image state with the flipped image
+    });
+  };
+  
+  const handleFlipVertical = () => {
+    if (!selectedImage) return;
+
+  flipImage(selectedImage, 'vertical', (flippedImage) => {
+    setSelectedImage(flippedImage); // Update the image state with the flipped image
+  });
+  };
+  
+
   const handleReplaceImage = () => {
     document.getElementById('imageUploader').click();
   };
 
-  const applyChanges = () => {
+  const applyChanges = async () => {
     if (!imageId.trim()) {
       alert('Please provide a unique ID for the image.');
       return;
     }
-
-    const newImage = { id: imageId.trim(), src: selectedImage };
-    setImageList([...imageList, newImage]);
-    setSelectedImage(null);
-    setDrawerVisible(false);
-    setImageId(''); // Reset the ID input field
-    setGalleryVisible(true); // Show gallery and navbar after applying changes
+  
+    try {
+      const croppedImage = await getCroppedImg(selectedImage, croppedArea);
+      const newImage = { id: imageId.trim(), src: croppedImage };
+      setImageList([...imageList, newImage]);
+      setSelectedImage(null);
+      setDrawerVisible(false);
+      setImageId('');
+      setGalleryVisible(true);
+    } catch (error) {
+      console.error('Error while applying changes:', error);
+      alert('Failed to apply changes. Please try again.');
+    }
   };
 
   const filteredImages = searchQuery
@@ -57,7 +90,7 @@ const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedI
       {/* Conditionally Render Navigation Bar */}
       {galleryVisible && (
         <AppBar position="fixed" sx={{ bgcolor: '#fff', zIndex: 1201 }}>
-          <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+          <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
             {/* Search Bar */}
             <TextField
               fullWidth
@@ -153,13 +186,13 @@ const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedI
                 />
                 {/* Action Buttons */}
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <IconButton onClick={() => alert('Rotate functionality here')} color="primary">
+                  <IconButton onClick={handleRotate} color="primary">
                     <RotateRight />
                   </IconButton>
-                  <IconButton onClick={() => alert('Flip Horizontal functionality here')} color="primary">
+                  <IconButton onClick={handleFlipHorizontal} color="primary">
                     <Flip />
                   </IconButton>
-                  <IconButton onClick={() => alert('Flip Vertical functionality here')} color="primary">
+                  <IconButton onClick={handleFlipVertical} color="primary">
                     <Flip sx={{ transform: 'rotate(90deg)' }} />
                   </IconButton>
                   <Button variant="outlined" onClick={handleReplaceImage}>
