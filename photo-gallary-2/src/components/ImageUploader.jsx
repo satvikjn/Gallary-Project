@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { Drawer, Button, IconButton, Typography, Box, Grid } from '@mui/material';
-import folder from "./img/folder2.png"
-import { useNavigate } from "react-router-dom";
+import { Drawer, Button, IconButton, Typography, Box, Grid, TextField, AppBar, Toolbar } from '@mui/material';
+import folder from "./img/folder2.png";
 import { Upload as UploadIcon, RotateRight, Flip } from '@mui/icons-material';
 import Cropper from 'react-easy-crop';
-
+import Masonry from '@mui/lab/Masonry';
+import { getCroppedImg } from '../utils/imageUtils'
 
 const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedImage, drawerVisible, selectedImage }) => {
-
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedArea, setCroppedArea] = useState(null);
-  const navigate = useNavigate();
+  const [imageId, setImageId] = useState(''); // State to store the image ID
+  const [searchQuery, setSearchQuery] = useState('');
+  const [galleryVisible, setGalleryVisible] = useState(false); // New state to control navbar visibility
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -34,120 +35,164 @@ const ImageUploader = ({ imageList, setImageList, setDrawerVisible, setSelectedI
   };
 
   const applyChanges = () => {
-    setImageList([...imageList, selectedImage]);
+    if (!imageId.trim()) {
+      alert('Please provide a unique ID for the image.');
+      return;
+    }
+
+    const newImage = { id: imageId.trim(), src: selectedImage };
+    setImageList([...imageList, newImage]);
     setSelectedImage(null);
     setDrawerVisible(false);
+    setImageId(''); // Reset the ID input field
+    setGalleryVisible(true); // Show gallery and navbar after applying changes
   };
 
-  const handleRotate = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.src = selectedImage;
-    img.onload = () => {
-      canvas.width = img.height;
-      canvas.height = img.width;
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((90 * Math.PI) / 180);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      setSelectedImage(canvas.toDataURL());
-    };
-  };
-
-  const handleFlip = (direction) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.src = selectedImage;
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.translate(direction === 'horizontal' ? canvas.width : 0, direction === 'vertical' ? canvas.height : 0);
-      ctx.scale(direction === 'horizontal' ? -1 : 1, direction === 'vertical' ? -1 : 1);
-      ctx.drawImage(img, 0, 0);
-      setSelectedImage(canvas.toDataURL());
-    };
-  };
-
+  const filteredImages = searchQuery
+    ? imageList.filter((image) => image?.id?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : imageList;
 
   return (
     <Box>
-      <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        minHeight: '50vh'
-      }}>
-        <svg>DriveFolderUploadIcon</svg>
-        <Box component="img"
-          src={folder}
-          alt="My Image"
-          sx={{
-            width: '15%',
-            boxShadow: 'none',
-          }} />
-        {/* <img src={folder} alt="Me" width={300} height={300}  /> */}
-        <Typography variant="caption" gutterBottom sx={{ display: 'block' }}>
-          Add Assets Here
-        </Typography>
-        <Button variant="contained" component="label" sx={{ marginY: '10px' }}>
-          +  Add
-          <input
-            id='imageUploader'
-            hidden
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-          />
-        </Button>
+      {/* Conditionally Render Navigation Bar */}
+      {galleryVisible && (
+        <AppBar position="fixed" sx={{ bgcolor: '#fff', zIndex: 1201 }}>
+          <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+            {/* Search Bar */}
+            <TextField
+              fullWidth
+              placeholder="Search by Image ID..."
+              variant="outlined"
+              sx={{ flex: 7 }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {/* Add More Photos Button */}
+            <Button
+              variant="contained"
+              component="label"
+              sx={{ flex: 1 }}
+            >
+              + Add Photos
+              <input
+                id="imageUploader"
+                hidden
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+            </Button>
+          </Toolbar>
+        </AppBar>
+      )}
 
-
-      </Box>
-
-      <Drawer
-        anchor="right"
-        open={drawerVisible}
-        onClose={() => setDrawerVisible(false)}
-      >
-        <Box sx={{ width: 1000, p: 2 }}>
-          <Typography variant="h6">Edit Image</Typography>
-          {selectedImage && (
-            <Box>
-              <Box sx={{ position: 'relative', height: 300, bgcolor: '#f0f0f0', mt: 2 }}>
-                <Cropper
-                  image={selectedImage}
-                  cropShape="rect"
-                  crop={crop}
-                  zoom={zoom}
-                  onCropChange={setCrop}
-                  onZoomChange={setZoom}
-                  onCropComplete={handleCropComplete}
+      {/* Content Section */}
+      <Box sx={{ pt: galleryVisible ? 10 : 0, px: 3 }}>
+        {!galleryVisible && (
+          <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            minHeight: '50vh',
+          }}>
+            <Box component="img"
+              src={folder}
+              alt="My Image"
+              sx={{
+                width: '15%',
+                boxShadow: 'none',
+              }} />
+            <Typography variant="caption" gutterBottom sx={{ display: 'block', mt: 2 }}>
+              Add Assets Here
+            </Typography>
+            {!drawerVisible && (
+              <Button variant="contained" component="label" sx={{ marginY: '10px' }}>
+                + Add
+                <input
+                  id="imageUploader"
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
                 />
-              </Box>
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                <IconButton onClick={handleRotate} color="primary">
-                  <RotateRight />
-                </IconButton>
-                <IconButton onClick={() => handleFlip('horizontal')} color="primary">
-                  <Flip />
-                </IconButton>
-                <IconButton onClick={() => handleFlip('vertical')} color="primary">
-                  <Flip sx={{ transform: 'rotate(90deg)' }} />
-                </IconButton>
-                <Button variant="outlined" onClick={handleReplaceImage}>
-                  Replace Image
-                </Button>
-                <Button variant="contained" onClick={applyChanges}>
-                  Apply
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </Box>
-      </Drawer>
+              </Button>
+            )}
+          </Box>
+        )}
 
+        <Drawer
+          anchor="right"
+          open={drawerVisible}
+          onClose={() => setDrawerVisible(false)}
+        >
+          <Box sx={{ width: 1000, p: 2 }}>
+            <Typography variant="h6">Edit Image</Typography>
+            {selectedImage && (
+              <Box>
+                {/* Image Cropper */}
+                <Box sx={{ position: 'relative', height: 300, bgcolor: '#f0f0f0', mt: 2 }}>
+                  <Cropper
+                    image={selectedImage}
+                    cropShape="rect"
+                    crop={crop}
+                    zoom={zoom}
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={handleCropComplete}
+                  />
+                </Box>
+                {/* Image ID Input */}
+                <TextField
+                  label="Image ID"
+                  variant="outlined"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  value={imageId}
+                  onChange={(e) => setImageId(e.target.value)}
+                />
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                  <IconButton onClick={() => alert('Rotate functionality here')} color="primary">
+                    <RotateRight />
+                  </IconButton>
+                  <IconButton onClick={() => alert('Flip Horizontal functionality here')} color="primary">
+                    <Flip />
+                  </IconButton>
+                  <IconButton onClick={() => alert('Flip Vertical functionality here')} color="primary">
+                    <Flip sx={{ transform: 'rotate(90deg)' }} />
+                  </IconButton>
+                  <Button variant="outlined" onClick={handleReplaceImage}>
+                    Replace Image
+                  </Button>
+                  <Button variant="contained" onClick={applyChanges}>
+                    Apply
+                  </Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Drawer>
 
+        
+        {galleryVisible && (
+          // <Grid container spacing={2}>
+          <Masonry columns={4} spacing={2}>
+            {filteredImages.map((image, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Box sx={{ position: 'relative' }}>
+                  <img src={image.src} alt={image.id} style={{ width: '100%' }} />
+                  <Typography variant="body2" sx={{ textAlign: 'center', mt: 1 }}>
+                    {image.id}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+            </Masonry>
+          // </Grid>
+          
+        )}
+      </Box>
     </Box>
   );
 };

@@ -1,8 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Grid from "@mui/material/Grid";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
+import { Drawer, Button, IconButton, Typography, Box, Grid } from '@mui/material';
 
 const GalleryPage = ({ imageList }) => {
   const navigate = useNavigate();
@@ -20,31 +18,51 @@ const GalleryPage = ({ imageList }) => {
       >
         Back to Upload
       </Button>
-      {imageList.length === 0 ? (
+
+      <Box sx={{ mt: 4 }}>
+          {imageList.map((image, index) => (
+            <img key={index} src={image} alt={`uploaded-${index}`} style={{ width: '100%' }} />
+          ))}
+      </Box>
+      
+      {/* {imageList.length === 0 ? (
         <Typography variant="body1" align="center" style={{ marginTop: "20px" }}>
-          No imageList uploaded. Please upload imageList on the Upload Page.
+          No images uploaded. Please upload images on the Upload Page.
         </Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={2} style={{ marginTop: "20px" }}>
           {imageList.map((image, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
               <div
                 style={{
                   borderRadius: "10px",
                   overflow: "hidden",
-                  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+                  transition: "transform 0.3s, box-shadow 0.3s",
+                  cursor: "pointer",
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.transform = "scale(1.05)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.transform = "scale(1)")
+                }
               >
                 <img
                   src={image}
                   alt={`Uploaded ${index}`}
-                  style={{ width: "100%", display: "block" }}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    borderRadius: "10px",
+                  }}
                 />
               </div>
             </Grid>
           ))}
         </Grid>
-      )}
+      )} */}
     </div>
   );
 };
